@@ -19,20 +19,19 @@ Anyway, it is really simple to understand what their are.
 
 A "token" is like a simplified representation of a element in the lexical context.
 
-Example with the shell langage :
+Example with the shell language :
 
 ```bash
 ls && pwd
 ```
 
-Ici, nous avons 3 tokens de 2 types différents :  
 Here, we have 3 tokens of 2 types :  
 `ls` is `TOK_WORD`  
 `&&` is `TOK_AND`  
 `pwd` also is `TOK_WORD`  
 
 `TOK_*` is a enum.  
-This is helpfull to abstract our elements rather than browse many times the word we curently process.
+This is helpful to abstract our elements rather than browse many times the word we currently process.
 
 ##### Lexer
 
