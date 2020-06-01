@@ -29,8 +29,8 @@ Here, we have 3 tokens of 2 types :
 This is helpful to abstract our elements rather than browse many times the word we currently process.
 ##### Lexer
 
-The lexer would be the "Rules Maker". (What a shitty name, sorry ...)  
-He's role is to check the compatibility of the current context with the next one. (at this step, we say "context" to the char level, not at the token level, that's the parser role.)
+The lexer would be the "Rules Maker". (What a shitty name, sorry...)  
+His role is to check the compatibility of the current context with the next one (at this step, we say "context" to the char level, not at the token level, that's the parser role).
 
 So, define these rules :  
 A `WORD` token would be : `a-zA-Z[0-9]`  
