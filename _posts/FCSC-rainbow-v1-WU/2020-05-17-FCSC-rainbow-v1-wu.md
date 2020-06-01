@@ -1,7 +1,7 @@
 ---
-title: [FR] [WU] [FCSC] Rainbow v1
+title: FR - FCSC 2020 - Write Up - Rainbow v1
 date: 2020-05-17 10:32:00 +07:00
-tags: [français, FCSC, CTF, WU, Web, php]
+tags: [francais, FCSC, CTF, WU, Web, php]
 description: Write Up du challenge Rainbow v1 du FCSC 2020.
 ---
 

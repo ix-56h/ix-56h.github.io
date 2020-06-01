@@ -1,18 +1,17 @@
 ---
-title: [EN] How to make an elegant tokenizer in C
+title: EN - How to make a elegant tokenizer in C
 date: 2020-06-01 12:45:00 +07:00
-tags: [tokenizer, lexer, parser, shell, C]
+tags: [english, tokenizer, lexer, parser, shell, C]
 description: Implementation of a tokenizer in a Shell Parser context in C.
 ---
 
 ## Definitions
 
-I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer is.
- The reason for that is the complexity (i guess ?) that seems for my comrades (o/).
- During the development of the last project of the first part of my 42 courses, I was in front of (too) many definitions of what “Lexer/Parser” is.
+I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer is.  
+The reason for that is the complexity (i guess ?) that seems for my comrades (o/).  
+During the development of the last project of the first part of my 42 cursus, i was in front of (too) many definitions of what "Lexer/Parser" is.
 
 Anyway, it is really simple to understand what it is.
-
 ##### Token
 
 A "token" is like a simplified representation of a element in the lexical context.  
@@ -27,28 +26,27 @@ Here, we have 3 tokens of 2 types :
 `pwd` also is `TOK_WORD`  
 
 `TOK_*` is an enum.  
- This is helpful to abstract our elements rather than browse many times the word we currently process.
+This is helpful to abstract our elements rather than browse many times the word we currently process.
 ##### Lexer
 
-The lexer would be the “Rules Maker”. (What a shitty name, sorry…)
- His role is to check the compatibility of the current context with the next one (at this step, we say “context” to the char level, not at the token level, that’s the parser's role).
-
+The lexer would be the "Rules Maker". (What a shitty name, sorry...)  
+His role is to check the compatibility of the current context with the next one (at this step, we say "context" to the char level, not at the token level, that's the parser's role).
 
 So, define these rules :  
 A `WORD` token would be : `a-zA-Z[0-9]`  
 A `OPERATOR` token would be : `&|><!;`  
-(don’t care about the Regexp, this is an example.)
+(don't care about the Regexp, this is a example.)
 
-Theses rules let us differentiate a token to another one.
+Theses rules let us differentiate a token to another one.  
 `ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).
 ##### Tokenizer
 
 The tokenizer is the code that uses the lexer's rules and will give us the full context.
 ##### Parser
 
-The parser will check the compatibility between the different contexts.
-This is basically a parser, so, if you want to learn more about it, check “Recursive Descent Parser” in references.
- ## It's time to tokenizing !
+The parser will check the compatibility between the different contexts.  
+This is basically a parser, so, if you want to learn more about it, check "Recursive Descent Parser" in references.
+## It's time to tokenizing !
 
 Let's see an example with the Shell grammar :  
 ```cpp
@@ -64,8 +62,8 @@ typedef enum		e_toktype {
 ```
 Here we have our tokens.
 
-Let me ask you: How would you recognize words? With a split and switch case? Hm, no.
- Answer: CHR_CLASS.
+Let me ask you : How would you recognize words ? With a split and switch case ? Hm, no.  
+Answer : CHR_CLASS.
 #### Lexer + CHR_CLASS
 
 We will define some enums which replaces the basic char recognization (`s[i] == '=';`) :  
@@ -83,8 +81,8 @@ typedef enum		e_chr_class {
 }					t_chr_class;
 ```
 
-“This is just some enums, what you want to do with that?”
- It’s time to show you what i mean by “total abstraction”:
+"This is just some enums, what you want to do with that ?"  
+It's time to show you what i mean by "total abstraction" :  
 ```cpp
 static t_chr_class		g_get_chr_class[255] =
 {
@@ -100,9 +98,9 @@ static t_chr_class		g_get_chr_class[255] =
 };
 ```
 
-Here, we define all enums who’s let us to abstract the charset. We can easily decide to set `space` as an entire word. That’s let us group the chars and their meaning.
-Ok, let see an example with `ls` :
-The word have 2 chars : `l` and `s`, these chars are abstracted as `CHR_WORD`.
+Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us group the chars and their meaning.  
+Ok, let see an example with `ls` :  
+The word have 2 chars : `l` and `s`, these chars are abstracted as "CHR_WORD".
 
 No switch case, no expensive lines, just a clean and fast-to-read code.  
 That's really usefull in this case :
@@ -120,10 +118,10 @@ switch (s[i]) {
 So, what's next ? The lexer, cause' rules are nothing without Judge ! (wtf i'm sayin ?)
 #### Lexer
 
-The lexer defines rules in the current context.
-At this point, we call “context” the token. We need to determine the current token before process him.
+The lexer defines rules on the current context.  
+At this point, we call "context" the token. We need to determine the current token before process him.  
 
-For that purpose, I use array :
+For that purpose, i use array :  
 ```cpp
 static t_toktype		g_get_tok_type[CHR_MAX] = {
 	[CHR_SP] = TOK_SP,
@@ -136,13 +134,13 @@ static t_toktype		g_get_tok_type[CHR_MAX] = {
 };
 ```
 
-This array lets us get the current context by the first char.
+This array let us to get the current context by the first char.  
+```cpp
+unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];
+```
 
-`unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];`
-
-Good, we have the context, now we need to process the current token as long as we are in a valid context.
-It’s time to code rules !
-
+Good, we have the context, now we need to process the current token as long as we are in a valid context.  
+It's time to code rules !
 ```cpp
 static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 {
@@ -166,11 +164,10 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
   ...
 };
 ```
-So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go!
+So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
+### Tokenizer in action !
 
-### Tokenizer in action!
-
-While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the contexte state are changed.
+While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the context state are changed.  
 ```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
