@@ -196,7 +196,7 @@ La question maintenant est de savoir comment parcourir tout cela... Rien de bien
 ### Tokenizer in action !
 
 While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the contexte state are changed.  
-```C
+```c+
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
 while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
@@ -212,6 +212,6 @@ For the parser, you can do it by yourself, if you want to have a look on my own,
 
 ### References
 
-(Finite State Machine)[https://en.wikipedia.org/wiki/Finite-state_machine]
-(Lexical_analysis)[https://en.wikipedia.org/wiki/Lexical_analysis]
-(Recursive-Descent-Parser)[https://github.com/ix-56h/Recursive-Descent-Parser]
+[Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine)  
+[Lexical_analysis](https://en.wikipedia.org/wiki/Lexical_analysis)  
+[Recursive-Descent-Parser](https://github.com/ix-56h/Recursive-Descent-Parser)  
