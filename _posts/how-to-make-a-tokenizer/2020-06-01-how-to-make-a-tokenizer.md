@@ -200,6 +200,8 @@ while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
 // here you can now save the token with your favorite data structure.
 ```
 
+## Conclusion
+
 So, you have made a Lexer & Tokenizer.  
 For the parser, you can do it by yourself, if you want to have a look on my own, you can see my [Recursive Descent Parser](https://github.com/ix-56h/Recursive-Descent-Parser).
 
