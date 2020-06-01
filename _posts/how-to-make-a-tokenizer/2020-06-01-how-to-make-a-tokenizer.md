@@ -1,7 +1,7 @@
 ---
-title: How to make a elegant tokenizer in C
+title: [EN] How to make a elegant tokenizer in C
 date: 2020-06-01 12:45:00 +07:00
-tags: [tokenizer, lexer, parser, shell, C]
+tags: [english, tokenizer, lexer, parser, shell, C]
 description: Implementation of a tokenizer in a Shell Parser context in C.
 ---
 
@@ -100,7 +100,6 @@ static t_chr_class		g_get_chr_class[255] =
 
 Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us to group the chars and their meaning.  
 Ok, let see an example with `ls` :  
-Le mot comprend 2 caractères : `l` et `s`, ces deux caractères sont abstraits en `CHR_WORD`.  
 The word have 2 chars : `l` and `s`, these chars are abstracted as "CHR_WORD".
 
 No switch case, no expensive lines, just a clean and fast-to-read code.  
