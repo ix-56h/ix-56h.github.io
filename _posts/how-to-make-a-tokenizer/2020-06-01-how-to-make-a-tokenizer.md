@@ -2,7 +2,7 @@
 title: How to make a elegant tokenizer in C
 date: 2020-06-01 12:45:00 +07:00
 tags: [tokenizer, lexer, parser, shell, C]
-description: Implementation of a tokenizer in a Shell Parser contextein C.
+description: Implementation of a tokenizer in a Shell Parser context in C.
 ---
 
 ## Definition
@@ -60,7 +60,7 @@ Cela est très grossier, mais c'est la définition la plus simple. Ça reste un 
 
 Nous parlons de shell depuis le début, donc on va utiliser les tokens de la grammaire SHELL !
 
-```C
+{% highlight C %}
 typedef enum		e_toktype {
 	TOK_ERROR,
   ...
@@ -70,7 +70,7 @@ typedef enum		e_toktype {
   ...
 	TOK_MAX
 }					t_toktype;
-```
+{% endhighlight %}
 
 Bien, ici, nous avons nos tokens.
 
@@ -139,7 +139,7 @@ A partir de ça, nous pouvons reconnaitre les caractères de notre commande, mai
 
 #### Lexer
 
-Le lexer va définir ce qui est autorisé dans le contexteactuel.  
+Le lexer va définir ce qui est autorisé dans le contexte actuel.  
 Le "context" correspond au token qu'on est en train de construire, il nous faut donc déterminer le potentiel type du token courrant.
 
 Pour cela, j'utilise un array :  
@@ -155,12 +155,12 @@ static t_toktype		g_get_tok_type[CHR_MAX] = {
 };
 ```
 
-Cet array me permettra de recuperer le potentiel contexte(le potentiel TOKEN si vous préférez) à partir du premier caractère de celui-ci :  
+Cet array me permettra de recuperer le potentiel contexte (le potentiel TOKEN si vous préférez) à partir du premier caractère de celui-ci :  
 ```C
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];
 ```
 
-Bien, désormais, nous avons le context, il nous faut maintenant continuer la tokenization jusqu'à rencontrer un cas qui mettra fin au contexteactuel.  
+Bien, désormais, nous avons le context, il nous faut maintenant continuer la tokenization jusqu'à rencontrer un cas qui mettra fin au contexte actuel.  
 Il est temps d'implémenter les règles ! Pour cela, on utilise un array à 2 dimensions :  
 ```C
 static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
