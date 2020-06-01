@@ -60,7 +60,7 @@ Cela est très grossier, mais c'est la définition la plus simple. Ça reste un 
 
 Nous parlons de shell depuis le début, donc on va utiliser les tokens de la grammaire SHELL !
 
-{% highlight C %}
+```cpp
 typedef enum		e_toktype {
 	TOK_ERROR,
   ...
@@ -70,7 +70,7 @@ typedef enum		e_toktype {
   ...
 	TOK_MAX
 }					t_toktype;
-{% endhighlight %}
+```
 
 Bien, ici, nous avons nos tokens.
 
@@ -82,7 +82,7 @@ La réponse : CHR_CLASS.
 #### Lexer + CHR_CLASS
 
 Avant tout, définissons des enums qui définiront le type d'un caractère sans avoir à faire `s[i] == '=';` :  
-```C
+```cpp
 typedef enum		e_chr_class {
 	CHR_ERROR,
 	CHR_SP,
@@ -101,7 +101,7 @@ Mais comme ça, ca ne sert pas à grand chose... Ce n'est juste qu'un tas d'enum
 Vous vous demandez surement à quoi cela va nous servir ?  
 Il est temps de vous montrer ce que j'entends par "abstraction totale des caractères" :
 
-```C
+```cpp
 static t_chr_class		g_get_chr_class[255] =
 {
 	[' '] = CHR_SP,
@@ -123,7 +123,7 @@ Reprennons l'exemple de `ls` :
 Le mot comprend 2 caractères : `l` et `s`, ces deux caractères sont abstraits en `CHR_WORD`.
 
 Cela revient à éviter de faire :  
-```C
+```cpp
 switch (s[i]) {
   case 'A':
     return (CHR_WORD);
@@ -143,7 +143,7 @@ Le lexer va définir ce qui est autorisé dans le contexte actuel.
 Le "context" correspond au token qu'on est en train de construire, il nous faut donc déterminer le potentiel type du token courrant.
 
 Pour cela, j'utilise un array :  
-```C
+```cpp
 static t_toktype		g_get_tok_type[CHR_MAX] = {
 	[CHR_SP] = TOK_SP,
 	[CHR_WORD] = TOK_WORD,
@@ -156,13 +156,13 @@ static t_toktype		g_get_tok_type[CHR_MAX] = {
 ```
 
 Cet array me permettra de recuperer le potentiel contexte (le potentiel TOKEN si vous préférez) à partir du premier caractère de celui-ci :  
-```C
+```cpp
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];
 ```
 
 Bien, désormais, nous avons le context, il nous faut maintenant continuer la tokenization jusqu'à rencontrer un cas qui mettra fin au contexte actuel.  
 Il est temps d'implémenter les règles ! Pour cela, on utilise un array à 2 dimensions :  
-```C
+```cpp
 static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 {
 	[TOK_SP] = {
@@ -196,7 +196,7 @@ La question maintenant est de savoir comment parcourir tout cela... Rien de bien
 ### Tokenizer in action !
 
 While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the contexte state are changed.  
-```c+
+```cpp+
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
 while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
