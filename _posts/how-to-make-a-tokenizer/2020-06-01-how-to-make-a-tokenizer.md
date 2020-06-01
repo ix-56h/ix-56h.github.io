@@ -5,61 +5,60 @@ tags: [tokenizer, lexer, parser, shell, C]
 description: Implementation of a tokenizer in a Shell Parser context in C.
 ---
 
-## Definition
+## Definitions
 
-Avant de s'attaquer au code, il est impératif de connaitre les différentes définitions liées aux Lexer, parser et tokenizer.
+I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer are.
 
-Durant le développement de mon projet de fin de cercle à 42Paris, j'ai été confronté aux mille et une définitions de ces termes.  
-Certains définissent le lexer comme étant une couche avant le Parser, d'autres définissent le lexer comme étant les règles régissant le lexique analysé et certains pensent que ce n'est qu'un autre mot pour désigner le parsing.
+The reason for that is the complexity (i guess ?) that seems for my comrades (o/).
 
-Enfin bref, c'était un bordel sans nom.
+During the development of the last project of the first part of my 42 cursus, i was in front of (too) many definitions of what "Lexer/Parser" is.
 
-Cependant, il est relativement simple de comprendre les différentes définitions :
+Anyway, it is really simple to understand what their are.
 
 ##### Token
 
-Un "token" représente un "mot", le champ lexical du language analysé est composé de différents mots.
+A "token" is like a simplified representation of a element in the lexical context.
 
-Exemple pour le language SHELL :
+Example with the shell langage :
 
 ```bash
 ls && pwd
 ```
 
 Ici, nous avons 3 tokens de 2 types différents :  
-`ls` de type `TOK_WORD`  
-`&&` de type `TOK_AND`  
-`pwd` de type `TOK_WORD`  
+Here, we have 3 tokens of 2 types :  
+`ls` is `TOK_WORD`  
+`&&` is `TOK_AND`  
+`pwd` also is `TOK_WORD`  
 
-Ici, `TOK_*` serait un enum, il est plus intuitif d'abstraire nos "mots" plutôt que d'analyser en continu le résultat d'un `split`.
+`TOK_*` is a enum.  
+This is helpfull to abstract our elements rather than browse many times the word we curently process.
 
 ##### Lexer
 
-Le lexer, lui, correspond à la définition des règles lexicales.
+The lexer would be the "Rules Maker". (What a shitty name, sorry ...)  
+He's role is to check the compatibility of the current context with the next one. (at this step, we say "context" to the char level, not at the token level, that's the parser role.)
 
-Ainsi, imaginons les règles suivantes :  
-Un token `MOT` peut être composé de : `a-zA-Z[0-9]`  
-Un token `OPERATOR` peut être composé de : `&|><!;`  
-Ne vous fiez pas à l'exactitude de la regexp, je liste juste les caractères acceptés dans la composition du mot.
+So, define these rules :  
+A `WORD` token would be : `a-zA-Z[0-9]`  
+A `OPERATOR` token would be : `&|><!;`  
+(don't care about the Regexp, this is a example.)
 
-Ces règles nous permettent donc d'identifier un `ls` d'un `>>`, ou encore un `echo hello word` d'un `||`.  
-
-(ici, `echo hello world` est composé de 3 tokens "MOT", cependant, `hello` et `world` ne seront pas identiques à `echo`)
+Theses rules let us to differenciate a token to another one.  
+`ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).  
 
 ##### Tokenizer
 
-Le tokenizer est la "couche" qui formera le token, il se fie aux règles du Lexer afin de découper les différents mots qui composent notre commande.
+The tokenizer is the code who use the lexer rules and will give us the full context.  
 
 ##### Parser
 
-Le parser, quant à lui, s'occupe de vérifier la compatibilité des mots entre eux.  
-Cela est très grossier, mais c'est la définition la plus simple. Ça reste un parser, merde !
+The parser will check the compatiblity between the different contexts.  
+This is basically a parser, so, if you want to learn more about it, check "Recursive Descent Parser" in references.
 
+## It's time to tokenizing !
 
-## Définition des tokens
-
-Nous parlons de shell depuis le début, donc on va utiliser les tokens de la grammaire SHELL !
-
+Let's see an example with the Shell grammar :  
 ```cpp
 typedef enum		e_toktype {
 	TOK_ERROR,
@@ -72,16 +71,15 @@ typedef enum		e_toktype {
 }					t_toktype;
 ```
 
-Bien, ici, nous avons nos tokens.
+Here we have our tokens.
 
-Désormais, laissez moi vous poser une question :  
-Comment comptez-vous découper les mots d'une commande ? Un split ? Tss.
+Let me ask you : How would you recognize words ? With a split and switch case ? Hm, no.
 
-La réponse : CHR_CLASS.
+Answer : CHR_CLASS.
 
 #### Lexer + CHR_CLASS
 
-Avant tout, définissons des enums qui définiront le type d'un caractère sans avoir à faire `s[i] == '=';` :  
+We will define some enums who replaces the basic char recognization (`s[i] == '=';`) :  
 ```cpp
 typedef enum		e_chr_class {
 	CHR_ERROR,
@@ -96,10 +94,9 @@ typedef enum		e_chr_class {
 }					t_chr_class;
 ```
 
-Mais comme ça, ca ne sert pas à grand chose... Ce n'est juste qu'un tas d'enum.
+"This is just some enums, what you want to do with that ?"
 
-Vous vous demandez surement à quoi cela va nous servir ?  
-Il est temps de vous montrer ce que j'entends par "abstraction totale des caractères" :
+It's time to show you what i mean by "total abstraction" :
 
 ```cpp
 static t_chr_class		g_get_chr_class[255] =
@@ -116,13 +113,14 @@ static t_chr_class		g_get_chr_class[255] =
 };
 ```
 
-Je vais vous expliquer ce qu'il se passe :  
-Ici, nous avons définis des enums qui nous permettront d'abstraire les caractères et ainsi les regroupper dans des "types" de caractères.  
+Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us to group the chars and their meaning.
 
-Reprennons l'exemple de `ls` :  
-Le mot comprend 2 caractères : `l` et `s`, ces deux caractères sont abstraits en `CHR_WORD`.
+Ok, let see an example with `ls` :  
+Le mot comprend 2 caractères : `l` et `s`, ces deux caractères sont abstraits en `CHR_WORD`.  
+The word have 2 chars : `l` and `s`, these chars are abstracted as "CHR_WORD".
 
-Cela revient à éviter de faire :  
+No switch case, no expensive lines, just a clean and fast-to-read code.  
+That's really usefull in this case :
 ```cpp
 switch (s[i]) {
   case 'A':
@@ -135,14 +133,14 @@ switch (s[i]) {
 }
 ```
 
-A partir de ça, nous pouvons reconnaitre les caractères de notre commande, mais cela ne sert à rien sans Lexer.
+So, what's next ? The lexer, cause' rules are nothing without Judge ! (wtf i'm sayin ?)
 
 #### Lexer
 
-Le lexer va définir ce qui est autorisé dans le contexte actuel.  
-Le "context" correspond au token qu'on est en train de construire, il nous faut donc déterminer le potentiel type du token courrant.
+The lexer define rules on the current context.  
+At this point, we call "context" the token. We need to determine the current token before process him.  
 
-Pour cela, j'utilise un array :  
+For that purpose, i use array :  
 ```cpp
 static t_toktype		g_get_tok_type[CHR_MAX] = {
 	[CHR_SP] = TOK_SP,
@@ -155,13 +153,13 @@ static t_toktype		g_get_tok_type[CHR_MAX] = {
 };
 ```
 
-Cet array me permettra de recuperer le potentiel contexte (le potentiel TOKEN si vous préférez) à partir du premier caractère de celui-ci :  
+This array let us to get the current context by the first char.  
 ```cpp
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];
 ```
 
-Bien, désormais, nous avons le context, il nous faut maintenant continuer la tokenization jusqu'à rencontrer un cas qui mettra fin au contexte actuel.  
-Il est temps d'implémenter les règles ! Pour cela, on utilise un array à 2 dimensions :  
+Good, we have the context, now we need to process the current token as long as we are in a valid context.  
+It's time to code rules !
 ```cpp
 static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 {
@@ -186,17 +184,12 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 };
 ```
 
-Ici, nous avons déclaré les règles des tokens.  
-Comme vous pouvez le voir, cela permet d'abstraire la totalité de la grammaire, ici, nous pouvons choisir de redéfinir les caractéristiques d'un `WORD` ou d'un `OPERATOR`.  
-Vous voulez définir le caractère `%` comme étant un espace ? Pas de problème.  
-Vous voulez définir le caractère `|` comme étant le premier caractère d'un `TOK_WORD` ? Modifiez donc `g_get_tok_type` !
-
-La question maintenant est de savoir comment parcourir tout cela... Rien de bien compliqué.
+So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
 
 ### Tokenizer in action !
 
 While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the contexte state are changed.  
-```cpp+
+```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
 while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
