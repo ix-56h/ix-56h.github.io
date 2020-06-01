@@ -7,20 +7,15 @@ description: Implementation of a tokenizer in a Shell Parser context in C.
 
 ## Definitions
 
-I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer are.
-
-The reason for that is the complexity (i guess ?) that seems for my comrades (o/).
-
+I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer are.  
+The reason for that is the complexity (i guess ?) that seems for my comrades (o/).  
 During the development of the last project of the first part of my 42 cursus, i was in front of (too) many definitions of what "Lexer/Parser" is.
 
-Anyway, it is really simple to understand what their are.
-
+Anyway, it is really simple to understand what it is.
 ##### Token
 
-A "token" is like a simplified representation of a element in the lexical context.
-
+A "token" is like a simplified representation of a element in the lexical context.  
 Example with the shell language :
-
 ```bash
 ls && pwd
 ```
@@ -32,7 +27,6 @@ Here, we have 3 tokens of 2 types :
 
 `TOK_*` is a enum.  
 This is helpful to abstract our elements rather than browse many times the word we currently process.
-
 ##### Lexer
 
 The lexer would be the "Rules Maker". (What a shitty name, sorry ...)  
@@ -43,18 +37,15 @@ A `WORD` token would be : `a-zA-Z[0-9]`
 A `OPERATOR` token would be : `&|><!;`  
 (don't care about the Regexp, this is a example.)
 
-Theses rules let us to differenciate a token to another one.  
-`ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).  
-
+Theses rules let us to differentiate a token to another one.  
+`ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).
 ##### Tokenizer
 
-The tokenizer is the code who use the lexer rules and will give us the full context.  
-
+The tokenizer is the code who use the lexer rules and will give us the full context.
 ##### Parser
 
 The parser will check the compatiblity between the different contexts.  
 This is basically a parser, so, if you want to learn more about it, check "Recursive Descent Parser" in references.
-
 ## It's time to tokenizing !
 
 Let's see an example with the Shell grammar :  
@@ -69,13 +60,10 @@ typedef enum		e_toktype {
 	TOK_MAX
 }					t_toktype;
 ```
-
 Here we have our tokens.
 
-Let me ask you : How would you recognize words ? With a split and switch case ? Hm, no.
-
+Let me ask you : How would you recognize words ? With a split and switch case ? Hm, no.  
 Answer : CHR_CLASS.
-
 #### Lexer + CHR_CLASS
 
 We will define some enums who replaces the basic char recognization (`s[i] == '=';`) :  
@@ -93,10 +81,8 @@ typedef enum		e_chr_class {
 }					t_chr_class;
 ```
 
-"This is just some enums, what you want to do with that ?"
-
-It's time to show you what i mean by "total abstraction" :
-
+"This is just some enums, what you want to do with that ?"  
+It's time to show you what i mean by "total abstraction" :  
 ```cpp
 static t_chr_class		g_get_chr_class[255] =
 {
@@ -112,8 +98,7 @@ static t_chr_class		g_get_chr_class[255] =
 };
 ```
 
-Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us to group the chars and their meaning.
-
+Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us to group the chars and their meaning.  
 Ok, let see an example with `ls` :  
 Le mot comprend 2 caractères : `l` et `s`, ces deux caractères sont abstraits en `CHR_WORD`.  
 The word have 2 chars : `l` and `s`, these chars are abstracted as "CHR_WORD".
@@ -131,9 +116,7 @@ switch (s[i]) {
     return (CHR_ERROR);
 }
 ```
-
 So, what's next ? The lexer, cause' rules are nothing without Judge ! (wtf i'm sayin ?)
-
 #### Lexer
 
 The lexer define rules on the current context.  
@@ -182,9 +165,7 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
   ...
 };
 ```
-
 So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
-
 ### Tokenizer in action !
 
 While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the contexte state are changed.  
@@ -198,12 +179,10 @@ while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
 }
 // here you can now save the token with your favorite data structure.
 ```
-
 ## Conclusion
 
 So, you have made a Lexer & Tokenizer.  
 For the parser, you can do it by yourself, if you want to have a look on my own, you can see my [Recursive Descent Parser](https://github.com/ix-56h/Recursive-Descent-Parser).
-
 ### References
 
 [Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine)  
