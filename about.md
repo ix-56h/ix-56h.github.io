@@ -8,7 +8,7 @@ comments: false
 
 The purpose of this blog is to motivate myself.
 
-Since i'm a 42Paris student, i spend my time in no sense activities, i've decided to invest myself in greatfull activities, like R.E, blog post writing and book reading.
+Since i'm a 42Paris student, i spend my time in no sense activities, i've decided to invest myself in greatfull activities, like Reverse Engineering, blog post writing and book reading.
 
 In 2019, i've created [42ctf.org](https://www.42ctf.org), a CTF platform  for training 42 students and other InfoSec friends.
 ##### Contact
