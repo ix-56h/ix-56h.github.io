@@ -1,5 +1,5 @@
 ---
-title: EN - How to make a elegant tokenizer in C
+title: EN - How to make an elegant tokenizer in C
 date: 2020-06-01 12:45:00 +07:00
 tags: [english, tokenizer, lexer, parser, shell, C]
 description: Implementation of a tokenizer in a Shell Parser context in C.
@@ -14,7 +14,7 @@ During the development of the last project of the first part of my 42 cursus, i 
 Anyway, it is really simple to understand what it is.
 ##### Token
 
-A "token" is like a simplified representation of a element in the lexical context.  
+A "token" is like a simplified representation of an element in the lexical context.  
 Example with the shell language :
 ```bash
 ls && pwd
@@ -35,7 +35,7 @@ His role is to check the compatibility of the current context with the next one 
 So, define these rules :  
 A `WORD` token would be : `a-zA-Z[0-9]`  
 A `OPERATOR` token would be : `&|><!;`  
-(don't care about the Regexp, this is a example.)
+(don't care about the Regexp, this is an example.)
 
 Theses rules let us differentiate a token to another one.  
 `ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).
@@ -167,7 +167,7 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
 ### Tokenizer in action !
 
-While we get the state of the current token, ex : `TOK_WORD`, we need to browse the current string until the context state are changed.  
+While we get the state of the current token, ex : `TOK_WORD`, we have to browse the current string until the current context state is not longer valid.  
 ```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
