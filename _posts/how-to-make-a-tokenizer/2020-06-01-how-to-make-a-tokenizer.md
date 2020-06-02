@@ -171,7 +171,7 @@ While we get the state of the current token, ex : `TOK_WORD`, we need to browse 
 ```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
-while (g_token_chr_rules[tok_type][g_get_chr_class[s[i]])
+while (g_token_chr_rules[token_type][g_get_chr_class[string[i]])
 {
   ...
   i++;  
