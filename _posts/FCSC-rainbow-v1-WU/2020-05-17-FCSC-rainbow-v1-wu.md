@@ -1,7 +1,7 @@
 ---
 title: FR - FCSC 2020 - Write Up - Rainbow v1
 date: 2020-05-17 10:32:00 +07:00
-tags: [francais, FCSC, CTF, WU, Web, php]
+tags: [francais, FCSC, CTF, WU, Web, php, GraphQL]
 description: Write Up du challenge Rainbow v1 du FCSC 2020.
 ---
 
@@ -14,7 +14,7 @@ On remarque rapidement que le paramètre est en Base64, en décodant, on découv
 ```js
 { allCooks (filter: { firstname: {like: "%%"}}) { nodes { firstname, lastname, speciality, price }}}
 ```
-Je ne connaissais pas ce format, en cherchant les erreurs que j'ai fait proc sur google, je découvre `GraphSQL` (oui je sais, je n'ai pas fait de web depuis assez longtemps).  
+Je ne connaissais pas ce format, en cherchant les erreurs que j'ai fait proc sur google, je découvre `GraphQL` (oui je sais, je n'ai pas fait de web depuis assez longtemps).  
 Ni une ni deux, je suis parti à la recherche d'exploit de GraphSQL.
 
 ## Exploit basique
