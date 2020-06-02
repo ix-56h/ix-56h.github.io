@@ -167,7 +167,7 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
 ### Tokenizer in action !
 
-While we get the state of the current token, ex : `TOK_WORD`, we have to browse the current string until the current context state is not longer valid.  
+While we get the state of the current token, ex : `TOK_WORD`, we have to browse the current string until the current context state is no longer valid.  
 ```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
