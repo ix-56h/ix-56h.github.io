@@ -7,7 +7,7 @@ description: Implementation of a tokenizer in a Shell Parser context in C.
 
 ## Definitions
 
-I the past, it was really hard for me to understand what exactly lexer/parser/tokenizer is.  
+In the past, it was really hard for me to understand what exactly lexer/parser/tokenizer is.  
 The reason for that is the complexity (i guess ?) that seems for my comrades (o/).  
 During the development of the last project of the first part of my 42 cursus, i was in front of (too) many definitions of what "Lexer/Parser" is.
 
