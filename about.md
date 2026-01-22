@@ -1,5 +1,5 @@
 ---
-title: /dev/null/about
+title: About me
 permalink: /about/
 layout: page
 excerpt: Solo developer, digital artist, and professional bug-creator. Currently transforming caffeine and existential dread into interactive art (lol i do nothing and live my life on infinite scrolling shitty feature to show me retarded AI stuff).
