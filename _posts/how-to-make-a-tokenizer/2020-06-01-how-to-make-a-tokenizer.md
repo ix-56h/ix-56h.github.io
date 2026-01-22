@@ -7,48 +7,49 @@ description: Implementation of a tokenizer in a Shell Parser context in C.
 
 ## Definitions
 
-In the past, it was really hard for me to understand what exactly lexer/parser/tokenizer is.  
-The reason for that is the complexity (i guess ?) that seems for my comrades (o/).  
-During the development of the last project of the first part of my 42 cursus, i was in front of (too) many definitions of what "Lexer/Parser" is.
+Understanding the concepts of lexer, parser, and tokenizer can be challenging when first encountered. During my work on a shell parser project at 42, I encountered many different definitions of these terms that initially seemed overwhelming.
 
-Anyway, it is really simple to understand what it is.
+However, these concepts are simpler than they first appear. Let me break them down clearly.
 ##### Token
 
-A "token" is like a simplified representation of an element in the lexical context.  
-Example with the shell language :
+A "token" is a simplified representation of an element in the lexical context.  
+Example with the shell language:
 ```bash
 ls && pwd
 ```
 
-Here, we have 3 tokens of 2 types :  
+Here, we have 3 tokens of 2 types:  
 `ls` is `TOK_WORD`  
 `&&` is `TOK_AND`  
-`pwd` also is `TOK_WORD`  
+`pwd` is also `TOK_WORD`  
 
 `TOK_*` is an enum.  
-This is helpful to abstract our elements rather than browse many times the word we currently process.
+This abstraction helps us avoid repeatedly analyzing the same word during processing.
 ##### Lexer
 
-The lexer would be the "Rules Maker". (What a shitty name, sorry...)  
-His role is to check the compatibility of the current context with the next one (at this step, we say "context" to the char level, not at the token level, that's the parser's role).
+The lexer defines the rules for tokenization. Its role is to check the compatibility of the current context with the next one. At this step, we work at the character level, not at the token level (which is the parser's role).
 
-So, define these rules :  
-A `WORD` token would be : `a-zA-Z[0-9]`  
-A `OPERATOR` token would be : `&|><!;`  
-(don't care about the Regexp, this is an example.)
+For example, we might define these rules:  
+A `WORD` token would be: `a-zA-Z[0-9]`  
+An `OPERATOR` token would be: `&|><!;`  
+(These are simplified examples for illustration.)
 
-Theses rules let us differentiate a token to another one.  
-`ls` would be different to `>>`, ls is a `word`, `>>` would be a `operator` (most exactly a `redirection`).
+In simpler terms:
+- A `WORD` can contain any lowercase letter (a-z), uppercase letter (A-Z), or digit (0-9)
+- An `OPERATOR` can be any of these characters: `&`, `|`, `>`, `<`, `!`, `;`
+
+These rules allow us to differentiate one token from another.  
+For instance, `ls` is a `word`, while `>>` is an `operator` (more specifically, a `redirection`).
 ##### Tokenizer
 
 The tokenizer is the code that uses the lexer's rules and will give us the full context.
 ##### Parser
 
-The parser will check the compatibility between the different contexts.  
-This is basically a parser, so, if you want to learn more about it, check "Recursive Descent Parser" in references.
-## It's time to tokenizing !
+The parser checks the compatibility between different contexts (at the token level).  
+For more details on parser implementation, see "Recursive Descent Parser" in the references section.
+## Implementation
 
-Let's see an example with the Shell grammar :  
+Let's examine an example using shell grammar:  
 ```cpp
 typedef enum		e_toktype {
 	TOK_ERROR,
@@ -60,13 +61,12 @@ typedef enum		e_toktype {
 	TOK_MAX
 }					t_toktype;
 ```
-Here we have our tokens.
+Here we have our token types.
 
-Let me ask you : How would you recognize words ? With a split and switch case ? Hm, no.  
-Answer : CHR_CLASS.
+How do we recognize words efficiently? Instead of using string splitting and switch cases, we use a more elegant approach: CHR_CLASS.
 #### Lexer + CHR_CLASS
 
-We will define some enums which replaces the basic char recognization (`s[i] == '=';`) :  
+We define enums to replace basic character recognition (like `s[i] == '='`):  
 ```cpp
 typedef enum		e_chr_class {
 	CHR_ERROR,
@@ -81,8 +81,7 @@ typedef enum		e_chr_class {
 }					t_chr_class;
 ```
 
-"This is just some enums, what you want to do with that ?"  
-It's time to show you what i mean by "total abstraction" :  
+Now let's see how we achieve complete abstraction using these enums:  
 ```cpp
 static t_chr_class		g_get_chr_class[255] =
 {
@@ -98,12 +97,12 @@ static t_chr_class		g_get_chr_class[255] =
 };
 ```
 
-Here, we define all enums who's let us to abstract the charset. We can easily decide to set a `space` as an entire word. That's let us group the chars and their meaning.  
-Ok, let see an example with `ls` :  
-The word have 2 chars : `l` and `s`, these chars are abstracted as "CHR_WORD".
+Here, we define enums that allow us to abstract the character set. We can easily decide to treat a `space` as part of a word, or group characters by their meaning.  
+For example, with `ls`:  
+The word has 2 characters: `l` and `s`, both abstracted as `CHR_WORD`.
 
-No switch case, no expensive lines, just a clean and fast-to-read code.  
-That's really usefull in this case :
+This eliminates verbose switch statements, resulting in clean and readable code.  
+This is particularly useful compared to the traditional approach:
 ```cpp
 switch (s[i]) {
   case 'A':
@@ -115,13 +114,13 @@ switch (s[i]) {
     return (CHR_ERROR);
 }
 ```
-So, what's next ? The lexer, cause' rules are nothing without Judge ! (wtf i'm sayin ?)
+Now let's implement the lexer rules that will use these character classes.
 #### Lexer
 
-The lexer defines rules on the current context.  
-At this point, we call "context" the token. We need to determine the current token before process him.  
+The lexer defines rules for the current context.  
+At this point, "context" refers to the token type. We need to determine the current token before processing it.  
 
-For that purpose, i use array :  
+We use an array for this purpose:  
 ```cpp
 static t_toktype		g_get_tok_type[CHR_MAX] = {
 	[CHR_SP] = TOK_SP,
@@ -134,13 +133,13 @@ static t_toktype		g_get_tok_type[CHR_MAX] = {
 };
 ```
 
-This array let us to get the current context by the first char.  
+This array allows us to determine the token type from the first character:  
 ```cpp
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[i]]];
 ```
 
-Good, we have the context, now we need to process the current token as long as we are in a valid context.  
-It's time to code rules !
+Once we have the token type, we need to process the token as long as we remain in a valid context.  
+Here are the rules that define valid character sequences for each token type:
 ```cpp
 static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
 {
@@ -164,10 +163,10 @@ static int				g_token_chr_rules[TOK_MAX][CHR_MAX] =
   ...
 };
 ```
-So, we have rules, now we need to browse as long as we are in a valid context and save the token. Easy to go !
-### Tokenizer in action !
+With these rules defined, we can now iterate through the string while the context remains valid, then save the token.
+### Tokenizer in Action
 
-While we get the state of the current token, ex : `TOK_WORD`, we have to browse the current string until the current context state is no longer valid.  
+Once we have the token type (e.g., `TOK_WORD`), we iterate through the string until the context is no longer valid:  
 ```cpp
 unsigned int i = 1;
 unsigned int token_type = g_get_tok_type[g_get_chr_class[string[0]]];
@@ -180,8 +179,8 @@ while (g_token_chr_rules[token_type][g_get_chr_class[string[i]])
 ```
 ## Conclusion
 
-So, you have made a Lexer & Tokenizer.  
-For the parser, you can do it by yourself, if you want to have a look on my own, you can see my [Recursive Descent Parser](https://github.com/ix-56h/Recursive-Descent-Parser).
+You now have a working lexer and tokenizer implementation.  
+For parser implementation, you can explore it on your own or check out my [Recursive Descent Parser](https://github.com/ix-56h/Recursive-Descent-Parser) for a complete example.
 ### References
 
 [Finite State Machine](https://en.wikipedia.org/wiki/Finite-state_machine)  
